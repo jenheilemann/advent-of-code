@@ -1,0 +1,19 @@
+# --- Day n: title ---
+
+
+EXAMPLE1 = <<~'EXAMPLE'
+          EXAMPLE
+
+
+class TestMain < Minitest::Test
+  def test_run
+    assert_equal(num, Main.run!(EXAMPLE1))
+  end
+end
+
+class Main
+  class << self
+    def run!(input)
+    end
+  end
+end

@@ -1,0 +1,187 @@
+class HeapQ < Array
+  def heapq_min_heapify()
+    return_array = self.clone
+    return_array.heapq_min_heapify!
+    return_array
+  end
+
+  def heapq_min_heapify!()
+    self.uniq!
+    for i in 1...self.length
+      heapq_min_bubble i
+    end
+    self
+  end
+
+  def heapq_min_enqueue(n)
+    return nil if n.nil?
+    idx = self.index n
+    return idx unless idx.nil?
+    self << n
+    heapq_min_bubble self.length - 1
+  end
+
+  def heapq_min_deque()
+    return nil if self.length == 0
+    return self.pop if self.length == 1
+    ret = self[0]
+    tmp = self.pop
+    self[0] = tmp
+    heapq_min_sink 0
+    ret
+  end
+
+  def heapq_min_update(old_val, new_val)
+    return nil if old_val.nil? or new_val.nil?
+    idx = self.index old_val
+    return nil if idx.nil?
+    new_idx = self.index new_val
+    return new_idx unless new_idx.nil?
+
+    self[idx] = new_val
+
+    if old_val > new_val
+      return heapq_min_bubble idx
+    else
+      return heapq_min_sink idx
+    end
+  end
+
+  def heapq_max_heapify()
+    return_array = self.clone
+    return_array.heapq_max_heapify!
+    return_array
+  end
+
+  def heapq_max_heapify!()
+    self.uniq!
+    for i in 1...self.length
+      heapq_max_bubble i
+    end
+    self
+  end
+
+  def heapq_max_enqueue(n)
+    return nil if n.nil?
+    idx = self.index n
+    return idx unless idx.nil?
+    self << n
+    heapq_max_bubble self.length - 1
+  end
+
+  def heapq_max_deque()
+    return nil if self.length == 0
+    return self.pop if self.length == 1
+    ret = self[0]
+    tmp = self.pop
+    self[0] = tmp
+    heapq_max_sink 0
+    ret
+  end
+
+  def heapq_max_update(old_val, new_val)
+    return nil if old_val.nil? or new_val.nil?
+    idx = self.index old_val
+    return nil if idx.nil?
+    new_idx = self.index new_val
+    return new_idx unless new_idx.nil?
+
+    self[idx] = new_val
+    if (old_val <=> new_val) == -1
+      return heapq_max_bubble idx
+    else
+      return heapq_max_sink idx
+    end
+  end
+
+  def heapq_peek()
+    self[0]
+  end
+
+  # Comment out this `private` when running tests, else all private methods will fail.
+  private
+
+  def heapq_get_parent(n)
+    return nil if n <= 0
+    (n - 1) / 2
+  end
+
+  def heapq_get_children(n)
+    return nil if n < 0
+    children = [n * 2 + 1, n * 2 + 2]
+    children.select { |child| child < self.length }
+  end
+
+  def heapq_min_bubble(idx)
+    return nil unless idx.between?(0, self.length - 1)
+    return 0 if idx == 0
+    parent = heapq_get_parent idx
+    return idx if (self[parent] <=> self[idx]) == -1
+    self[parent], self[idx] = self[idx], self[parent]
+    heapq_min_bubble parent
+  end
+
+  def heapq_min_sink(idx)
+    return nil unless idx.between?(0, self.length - 1)
+    children = heapq_get_children idx
+    return idx if children.length == 0
+
+    #one child to sink
+    if children.length == 1
+      child = children[0]
+      return idx if (self[child] <=> self[idx]) == 1
+      self[child], self[idx] = self[idx], self[child]
+      return heapq_min_sink child
+    end
+
+    #two children
+    child = heapq_smaller_child children
+    return idx if(self[child] <=> self[idx]) == 1
+    self[child], self[idx] = self[idx], self[child]
+    heapq_min_sink child
+  end
+
+  def heapq_max_bubble(idx)
+    return nil unless idx.between?(0, self.length - 1)
+    return 0 if idx == 0
+    parent = heapq_get_parent idx
+    return idx if (self[parent] <=> self[idx]) == 1
+    self[parent], self[idx] = self[idx], self[parent]
+    heapq_max_bubble parent
+  end
+
+  def heapq_max_sink(idx)
+    return nil unless idx.between?(0, self.length - 1)
+    children = heapq_get_children idx
+    return idx if children.length == 0
+
+    #one child to sink
+    if children.length == 1
+      child = children[0]
+      return idx if (self[child] <=> self[idx]) == -1
+      self[child], self[idx] = self[idx], self[child]
+      return heapq_max_sink child
+    end
+
+    #two children
+    child = heapq_larger_child children
+    return idx if (self[child] <=> self[idx]) == -1
+    self[child], self[idx] = self[idx], self[child]
+    heapq_max_sink child
+  end
+
+  def heapq_smaller_child(arr)
+    arr.each { |idx| return nil if idx >= self.length }
+    return nil if arr.length == 0
+    return arr[0] if arr.length == 1
+    ((self[arr[0]] <=> self[arr[1]]) == -1) ? arr[0] : arr[1]
+  end
+
+  def heapq_larger_child(arr)
+    arr.each { |idx| return nil if idx >= self.length }
+    return nil if arr.length == 0
+    return arr[0] if arr.length == 1
+    ((self[arr[0]] <=> self[arr[1]]) == 1) ? arr[0] : arr[1]
+  end
+
+end

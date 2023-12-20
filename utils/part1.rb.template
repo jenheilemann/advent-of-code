@@ -7,7 +7,7 @@ EXAMPLE1 = <<~'EXAMPLE'
 
 class TestMain < Minitest::Test
   def test_run
-    assert_equal(num, Main.run!(EXAMPLE1))
+    assert_equal(1, Main.run!(EXAMPLE1))
   end
 end
 

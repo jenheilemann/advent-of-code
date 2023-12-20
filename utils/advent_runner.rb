@@ -32,19 +32,17 @@ end.parse!
 class AdventRunner
   class << self
     def go!
-      if is_advent_season? && todays_folder_does_not_exist?
-        build_todays_folder!
-        puts "Today's folder created, input data downloaded."
-        puts "Good luck!"
-        return
-      end
+      year = get_year($opts)
+      day = get_day($opts, year)
+      part = get_part($opts, year, day)
 
-      file = find_file({type: 'rb', year:$opts[:year], part: $opts[:part], day: $opts[:day]})
-      puts "Requiring latest file: #{file}"
+      # if this creates a new rb file, it also exits the program
+      build_todays_folder!(year, day, part)
+
+      file = find_file({type: 'rb', year: year, part: part, day: day})
+      puts "Requiring specified file: #{file}"
       require file
-      sleep(0.3)
       puts "Running tests...."
-      sleep(0.3)
       result = Minitest.run
       return puts("Tests failed, try again!") unless result
 
@@ -54,7 +52,7 @@ class AdventRunner
 
       if $opts[:auto_run]
         puts "\n\nTests passed, autorunning full input...."
-        sleep(1) && run_full
+        run_full(day, year)
         return
       end
 
@@ -64,40 +62,52 @@ class AdventRunner
       end
 
       puts "To skip this next time, use '-y'"
-      sleep(1)
-      run_full
+      run_full(day, year)
     end
 
-    def todays_folder_does_not_exist?
-      t = Time.now
-      files = Dir.glob("#{Dir.pwd}/#{t.year}/Day #{t.strftime('%d')}/*")
-      files.length == 0
+    def file_does_not_exist?(year, day, part)
+      return false if year != Time.now.year.to_s && day.nil?
+
+      file = find_file({type: 'txt', year:year, day: day})
+      return true if !file
+
+      file = find_file({type: 'rb', year:year, part: part, day: day})
+      return !!file
     end
 
-    def build_todays_folder!
-      t = Time.now
-      folder = "#{Dir.pwd}/#{t.year}/Day #{t.strftime('%d')}/"
+    def build_todays_folder!(year, day, part)
+      day_s = day.rjust(2, '0')
+      folder = "#{Dir.pwd}/#{year}/Day #{day_s}/"
+      FileUtils.mkdir_p folder
 
+      input = find_file({type: 'txt', year:year, day: day})
+      if !input
+        uri = URI.parse "https://adventofcode.com/#{year}/day/#{day}/input"
+        cookie = File.read("#{Dir.pwd}/.auth-cookie")
+        user_agent = "ruby script by jenheilemann @ https://github.com/jenheilemann/advent-of-code, Merry Christmas!"
+        puts "opening uri: #{uri}"
 
-      uri = URI.parse "https://adventofcode.com/#{t.year}/day/#{t.day}/input"
-      cookie = File.read("#{Dir.pwd}/.auth-cookie")
-      user_agent = "ruby script by jenheilemann @ https://github.com/jenheilemann/advent-of-code, Merry Christmas!"
-      puts "opening uri: #{uri}"
+        request = Net::HTTP.get_response(uri, {
+          Cookie: "session=#{cookie}",
+          UserAgent: user_agent})
 
-      request = Net::HTTP.get_response(uri, {
-        Cookie: "session=#{cookie}",
-        UserAgent: user_agent})
-
-      if request.response.code == '200'
-        FileUtils.mkdir_p folder
-        FileUtils.cp("#{Dir.pwd}/utils/part1.rb.template", folder + 'part1.rb')
-        # Save the response body (file content) to a local file
-        File.open(folder + 'input.txt', 'w') do |file|
-          file.write(request.response.body)
+        if request.response.code == '200'
+          # Save the response body (file content) to a local file
+          File.open(folder + 'input.txt', 'w') do |file|
+            file.write(request.response.body)
+          end
+        else
+          puts "Error: #{request.response.code} - #{request.response.message}"
+          raise StandardError.new("Input file unable to download - did you put your session cookie in .auth-cookie?")
         end
-      else
-        puts "Error: #{request.response.code} - #{request.response.message}"
       end
+
+      file = find_file({type: 'rb', year:year, part: part, day: day})
+      return if file
+      to_copy = part == '1' ? "#{Dir.pwd}/utils/part1.rb.template" : "#{folder}part1.rb"
+      FileUtils.cp(to_copy, folder + "part#{part}.rb")
+      puts "Created #{folder}part#{part}.rb, good luck!"
+      exit
     end
 
     def is_advent_season?
@@ -105,15 +115,45 @@ class AdventRunner
       t.month == 12 && t.day < 26
     end
 
-    def run_full
-      input = File.read(find_file({type: 'txt', day: $opts[:day], year:$opts[:year]}))
+    def get_year(opts)
+      if opts[:year]
+        ynum = opts[:year].to_i
+        if ynum < 15 ||  ynum > 100 && ynum < 2015
+          raise ArgumentError.new("There aren't AdventofCode problems before 2015, silly.")
+        end
+        return opts[:year].to_i < 2000 ? '20' + opts[:year] : opts[:year]
+      end
+      t = Time.now
+      return t.year.to_s if t.month == 12
+      (t.year - 1).to_s
+    end
+
+    def get_day(opts, year)
+      return opts[:day].to_i.to_s if opts[:day]
+      t = Time.now
+      return t.day.to_s if is_advent_season? && year == t.year.to_s
+      latest = find_file(type: 'txt', year: year)
+      return '1' if !latest
+      return /Day\s?(\d+)/.match(latest).captures[0].to_i.to_s
+    end
+
+    def get_part(opts, year, day)
+      return opts[:part] if opts[:part]
+      latest = find_file(type: 'rb', year: year, day: day)
+      return '1' if !latest
+      return /part(\d+)/.match(latest).captures[0].to_i.to_s
+    end
+
+    def run_full(day, year)
+      input = File.read(find_file(type: 'txt', day: day, year: year))
       puts "#{Main.run!(input)}"
     end
 
     def find_file(opts = {})
+      day = opts[:day].nil? ? '' : opts[:day].rjust(2, '0')
       search_str = "#{Dir.pwd}/"
-      search_str += opts[:year] ? "20#{opts[:year]}/"   : "**/"
-      search_str += opts[:day]  ? "Day*#{opts[:day]}/"  : (opts[:year] ? "**/" : "")
+      search_str += opts[:year] ? "#{opts[:year]}/"   : "**/"
+      search_str += opts[:day]  ? "Day*#{day}/"  : (opts[:year] ? "**/" : "")
       search_str += opts[:part] ? "*part#{opts[:part]}" : "*"
       search_str += ".#{opts[:type]}"
       files = Dir.glob(search_str)

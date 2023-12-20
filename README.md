@@ -14,3 +14,6 @@ This repo follows the automation guidelines on the /r/adventofcode community [wi
 - Once inputs are downloaded, they are cached locally (`build_todays_folder!`)
 - The User-Agent is set to 'Jen Heilemann' since I maintain this repo :)
 
+### Completeness
+
+It's not complete. Half of it doesn't work, and most won't run on with the run.rb script. Wheeeeeeeeeeee

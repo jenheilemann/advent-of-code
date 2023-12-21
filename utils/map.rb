@@ -1,4 +1,5 @@
 require 'matrix'
+require 'minitest'
 
 UTIL0 ="
 #..

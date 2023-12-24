@@ -50,6 +50,7 @@ class TestMap < Minitest::Test
     assert map.outside_bounds?([0,-1])
     assert map.outside_bounds?([0,4])
     assert map.outside_bounds?([3,0])
+    assert map.outside_bounds?(Vector[3,0])
 
     refute map.outside_bounds?(Position.new(x:0,y:0))
     refute map.outside_bounds?(Position.new(x:0,y:3))
@@ -64,6 +65,7 @@ class Map < Matrix
   DOWN  = ::Vector[ 0, 1 ]
   LEFT  = ::Vector[-1, 0 ]
   RIGHT = ::Vector[ 1, 0 ]
+  DIRECTIONS = [UP, DOWN, LEFT, RIGHT]
 
   class << self
     def from_input(str)

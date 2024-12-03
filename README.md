@@ -8,6 +8,15 @@ To use:
 2. Run `ruby run.rb`. This will either download your input for the current day and create the day folder with a basic template, or run the code in /year/day{n}/part{latest}.rb. If tests pass, it will prompt to run the code against the input file.
 3. Profit!
 
+Other options:
+
+The utils/advent_runner.rb has all the options. Examples:
+
+- `-y` skips the prompt if tests pass.
+- `-Y19` sets the desired year to 2019.
+- `-p2` sets up/runs part 2. (if part 2 is already set up, it's the default)
+- `-d15` sets the desired day to 15.
+
 This repo follows the automation guidelines on the /r/adventofcode community [wiki](https://www.reddit.com/r/adventofcode/wiki/faqs/automation). Specifically:
 
 - There are no scheduled outbound calls, only one that happens if today's advent folder doesn't exist yet.
@@ -16,4 +25,4 @@ This repo follows the automation guidelines on the /r/adventofcode community [wi
 
 ### Completeness
 
-It's not complete. Half of it doesn't work, and most won't run on with the run.rb script. Wheeeeeeeeeeee
+It's not complete. Half of it doesn't work, and most won't run on the run.rb script. Wheeeeeeeeeeee

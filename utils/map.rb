@@ -38,9 +38,9 @@ class TestMap < Minitest::Test
   end
   def test_find_indexes
     map = Map.from_input(UTIL0)
-    assert_equal([[0, 0], [1, 0], [3, 2]], map.find_indexes("#"))
+    assert_equal([[0, 0], [0, 1], [2, 3]], map.find_indexes("#"))
 
-    assert_equal([[0, 0], [1, 0], [3, 2]], map.find_indexes {|el| el == "#"})
+    assert_equal([[0, 0], [0, 1], [2, 3]], map.find_indexes {|el| el == "#"})
   end
 
   def test_outside_bounds
@@ -102,9 +102,9 @@ class Map < Matrix
 
     self.each_with_index do |element, row, col|
       if block_given?
-        indexes << [row, col] if yield(element)
+        indexes << [col, row] if yield(element)
       else
-        indexes << [row, col] if element == value
+        indexes << [col, row] if element == value
       end
     end
 
